@@ -1,12 +1,13 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
 import datetime
 from openpyxl import Workbook, load_workbook
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
+import random
 
-TOKEN = "8510356081:AAFrHnmw9ui7iQ-y4ADcEcXl1Tbd35rt8Eo"  # Your Telegram bot token
-ADMIN_CHAT_ID = "6125907347"  # Your Telegram user ID for receiving feedback privately
+TOKEN = "8510356081:AAFrHnmw9ui7iQ-y4ADcEcXl1Tbd35rt8Eo"
+ADMIN_CHAT_ID = 6125907347  
 
-waiting_for_feedback = False  # flag for tracking feedback input
+waiting_for_feedback = False
 
 
 def save_feedback_to_excel(username, feedback):
@@ -18,7 +19,7 @@ def save_feedback_to_excel(username, feedback):
     except:
         workbook = Workbook()
         sheet = workbook.active
-        sheet.append(["Username", "Feedback", "Date", "Time"])  # header row
+        sheet.append(["Username", "Feedback", "Date", "Time"])
 
     now = datetime.datetime.now()
     sheet.append([username, feedback, now.strftime("%Y-%m-%d"), now.strftime("%H:%M:%S")])
@@ -28,15 +29,14 @@ def save_feedback_to_excel(username, feedback):
 def start(update: Update, context: CallbackContext):
     keyboard = [
         [InlineKeyboardButton("🏖 Holidays", callback_data="holidays")],
-        [InlineKeyboardButton("💡Exam Motivation", callback_data="motivation")],
+        [InlineKeyboardButton("💡 Motivation", callback_data="motivation")],
+        [InlineKeyboardButton("📅 Full Timetable", callback_data="timetable")],
         [InlineKeyboardButton("📝 Feedback", callback_data="feedback")]
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
     update.message.reply_text(
         "Hello! I am your KL Study Assistant Bot 🤖\n\nChoose what you need:",
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
@@ -76,18 +76,41 @@ def button_handler(update: Update, context: CallbackContext):
             "💪 Don’t stop when you're tired. Stop when you are done!",
             "🎯 Small daily progress adds up to big results.",
             "⏳ 45 minutes of focused study > 3 hours of distracted study!",
-            "🚫 Stop doubting yourself — work hard and make it happen.",
-            "You’ve got this. Don’t stop.",
-            "📚Work hard in silence; results will make the noise.",
-            "Start now. Get ahead."
+            "🚫 Stop doubting yourself — work hard and make it happen."
         ]
-
-        import random
         query.edit_message_text("💡 *Daily Motivation*\n\n" + random.choice(tips), parse_mode="Markdown")
+
+    elif query.data == "timetable":
+        query.edit_message_text(
+        "📅 *KL University Daily Timetable*\n\n"
+        "⏰ *Regular Class Slots*\n\n"
+        "1️⃣ 07:10 – 08:00 (50 min)\n"
+        "2️⃣ 08:00 – 08:50 (50 min)\n\n"
+        "🧋 *Break*: 08:50 – 09:20 (30 min)\n\n"
+        "3️⃣ 09:20 – 10:10 (50 min)\n"
+        "4️⃣ 10:10 – 11:00 (50 min)\n\n"
+        "☕ *Break*: 11:00 – 11:10 (10 min)\n\n"
+        "5️⃣ 11:10 – 12:00 (50 min)\n"
+        "6️⃣ 12:00 – 12:50 (50 min)\n\n"
+        "🍽 *Lunch Breaks*\n"
+        "   Phase 1: 12:00 – 12:50\n"
+        "   Phase 2: 12:50 – 13:50\n"
+        "   Phase 3: 13:50 – 14:50\n\n"
+        "7️⃣ 13:00 – 13:50 (50 min)\n"
+        "8️⃣ 13:50 – 14:40 (50 min)\n\n"
+        "🧋 *Break*: 14:40 – 14:50 (10 min)\n\n"
+        "9️⃣ 14:50 – 15:40 (50 min)\n"
+        "🔟 15:50 – 16:40 (50 min)\n"
+        "1️⃣1️⃣ 16:40 – 17:30 (50 min)\n",
+        parse_mode="Markdown"
+    )
+
 
     elif query.data == "feedback":
         waiting_for_feedback = True
-        query.edit_message_text("📝 Please type your feedback below.\nYour feedback will help improve the bot 😊")
+        query.edit_message_text(
+            "📝 Please type your feedback below.\nYour opinion helps us improve this bot 😊"
+        )
 
 
 def text_handler(update: Update, context: CallbackContext):
@@ -96,25 +119,25 @@ def text_handler(update: Update, context: CallbackContext):
     if waiting_for_feedback:
         feedback = update.message.text
         waiting_for_feedback = False
-        username = update.message.from_user.username or "No Username"
+        username = update.message.from_user.username or "Anonymous"
 
-        # Save to Excel
         save_feedback_to_excel(username, feedback)
 
-        # Send to admin
-        context.bot.send_message(
-            chat_id=ADMIN_CHAT_ID,
-            text=f"📩 *New Feedback Received:*\n\n{feedback}\n\nFrom: @{username}",
+        try:
+            context.bot.send_message(
+                chat_id=ADMIN_CHAT_ID,
+                text=f"📩 New Feedback:\n\n{feedback}\n\nFrom: @{username}",
+                parse_mode="Markdown"
+            )
+        except:
+            print("Failed to send to admin")
+
+        update.message.reply_text(
+            "🙏 Thank you for your feedback! We’ll review it and try to implement improvements soon 🚀",
             parse_mode="Markdown"
         )
-
-        # User response after feedback sent
-        update.message.reply_text(
-            "Thanks a lot for your feedback! ❤️ We’ll look into your suggestion and try to implement it as soon as possible. Stay tuned! 🚀"
-        )
-
     else:
-        update.message.reply_text("Use /start to open the menu 🙂")
+        update.message.reply_text("Use /start to open menu 🙂")
 
 
 def main():
