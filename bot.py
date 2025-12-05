@@ -1,11 +1,13 @@
+import os
 import datetime
 from openpyxl import Workbook, load_workbook
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
 import random
 
-TOKEN = ""
-ADMIN_CHAT_ID = 6125907347  
+TOKEN = os.getenv("TOKEN")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+
 
 waiting_for_feedback = False
 
@@ -154,4 +156,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
