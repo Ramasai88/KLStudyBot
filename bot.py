@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
 import random
 
-TOKEN = "8510356081:AAFrHnmw9ui7iQ-y4ADcEcXl1Tbd35rt8Eo"
+TOKEN = ""
 ADMIN_CHAT_ID = 6125907347  
 
 waiting_for_feedback = False
@@ -154,3 +154,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
